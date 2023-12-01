@@ -1,8 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'dart:async';
+
 
 void main(List<String> arguments) async {
+  print("게임을 시작하겠습니까?(Y/N)");
+  print("Y");
+  print("----------------");
+  print("현재 서버 시각 : 0");
+  print("현재 공의 위치 : (13 , 12)");
+  
   while (true) {
     print('방 조회하기 : 1, 방 만들기: 2, 방 접속하기 : 3');
     String input = stdin.readLineSync() ?? '';
@@ -22,6 +30,25 @@ void main(List<String> arguments) async {
         break;
     }
   }
+}
+
+Future connectServer() async {
+  final socket = await WebSocket.connect('ws://localhost:4040/ws');
+  print('Connected to server!');
+
+  // Read a line from the console
+  print('Enter your username: ');
+  final username = stdin.readLineSync();
+
+  // Send a message to the server
+  socket.add('Hello, server! My name is $username');
+
+  // Listen for incoming messages from the server
+  socket.listen((message) {
+    print('Received message: $message');
+  });
+
+
 }
 
 Future<void> getRoomList() async {
@@ -73,19 +100,37 @@ Future<void> createRoom() async {
 
 Future<void> joinRoom() async {
   print('접속할 방의 인덱스를 입력하세요:');
-  String? index = stdin.readLineSync();
+  String? roomId = stdin.readLineSync();
   var url = Uri.parse('http://localhost:4040/join');
-  var response = await http.post(
-    url,
-    headers: {'Content-Type': 'application/json'},
-    body: json.encode({
-      'roomIndex': int.tryParse(index ?? '0'),
-    }),
-  );
 
-  if (response.statusCode == 200) {
-    print('방에 성공적으로 접속했습니다.');
-  } else {
-    print('방 접속에 실패했습니다.');
+  var socket = await WebSocket.connect('ws://localhost:4040/join?roomId=$roomId');
+  socketListen(socket);
+  InRoomLoop();
+}
+
+void InRoomLoop() {
+  while(true) {
+    print('방 나가기 : 1, 게임 시작하기 : 2');
+    String input = stdin.readLineSync() ?? '';
+
+    switch (input) {
+      case '1': //방 나가기
+        break;
+      case '2': // 시작하기.
+        break;
+      default:
+        print('올바른 숫자를 입력하세요.');
+        break;
+    }
   }
+}
+void socketListen(WebSocket socket) {
+  socket.listen(
+    (data) {
+      print('Received data: $data');
+    },
+    onDone: () {
+      print('Connection closed.');
+    },
+  );  
 }
