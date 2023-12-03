@@ -3,14 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 
-
 void main(List<String> arguments) async {
-  print("게임을 시작하겠습니까?(Y/N)");
-  print("Y");
-  print("----------------");
-  print("현재 서버 시각 : 0");
-  print("현재 공의 위치 : (13 , 12)");
-  
   while (true) {
     print('방 조회하기 : 1, 방 만들기: 2, 방 접속하기 : 3');
     String input = stdin.readLineSync() ?? '';
@@ -47,8 +40,6 @@ Future connectServer() async {
   socket.listen((message) {
     print('Received message: $message');
   });
-
-
 }
 
 Future<void> getRoomList() async {
@@ -90,7 +81,6 @@ Future<void> createRoom() async {
       'pwd': pwd,
     }),
   );
-
   if (response.statusCode == 201) {
     print('방이 성공적으로 만들어졌습니다.');
   } else {
@@ -103,18 +93,20 @@ Future<void> joinRoom() async {
   String? roomId = stdin.readLineSync();
   var url = Uri.parse('http://localhost:4040/join');
 
-  var socket = await WebSocket.connect('ws://localhost:4040/join?roomId=$roomId');
+  var socket =
+      await WebSocket.connect('ws://localhost:4040/join?roomId=$roomId');
   socketListen(socket);
-  InRoomLoop();
+  InRoomLoop(socket);
 }
 
-void InRoomLoop() {
-  while(true) {
+void InRoomLoop(WebSocket socket) {
+  while (true) {
     print('방 나가기 : 1, 게임 시작하기 : 2');
     String input = stdin.readLineSync() ?? '';
 
     switch (input) {
       case '1': //방 나가기
+        socket.add('ready');
         break;
       case '2': // 시작하기.
         break;
@@ -124,6 +116,7 @@ void InRoomLoop() {
     }
   }
 }
+
 void socketListen(WebSocket socket) {
   socket.listen(
     (data) {
@@ -132,5 +125,5 @@ void socketListen(WebSocket socket) {
     onDone: () {
       print('Connection closed.');
     },
-  );  
+  );
 }
