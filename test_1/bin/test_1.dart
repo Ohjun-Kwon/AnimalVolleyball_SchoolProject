@@ -217,13 +217,9 @@ void handleCreateRoomRequest(HttpRequest req) async {
 
   print(
       '방 생성 성공: ${newRoom.name}  ${newRoom.roomIndex} :: ${newRoom.name} / ${newRoom.locked} / ${newRoom.pwd} ');
-
-  User? user = await upgradeToSocket(req); // 해당 방 접속.
-  if (user != null) JoinRoom(newRoom.roomIndex, user);
-
   req.response
     ..statusCode = HttpStatus.created
-    ..write('방 생성 성공: ${newRoom.name}');
+    ..write(jsonEncode({'roomIndex': newRoom.roomIndex}));
   req.response.close();
 }
 
